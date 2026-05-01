@@ -23,6 +23,16 @@ public class Pawn extends Piece {
         return false;
     }
 
+    private boolean capturePiece(int row, int col, int toRow, int toCol, Piece[][] board) {
+        Piece currentPawn = board[row][col];
+        Piece futureSq = board[toRow][toCol];
+
+        if(futureSq != null && futureSq.getColor() != currentPawn.getColor() && Math.abs(row - toRow) == Math.abs(col - toCol) && Math.abs(row-toRow) == 1) {
+            return true;
+        }
+        return false;
+    }
+
     public boolean isValidMove(int row, int col, int toRow, int toCol, Piece[][] board) {
 
 
@@ -33,6 +43,8 @@ public class Pawn extends Piece {
         if(Math.abs(row - toRow) == 1 && col == toCol) {
             return true;
         }
+
+        if(capturePiece(row, col, toRow, toCol, board)) return true;
 
         return false;
     }

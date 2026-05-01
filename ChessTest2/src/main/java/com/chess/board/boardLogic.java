@@ -7,23 +7,10 @@ public class boardLogic {
     public final Piece[][] board = new Piece[8][8];
     private List<Piece> capturedPieces = new ArrayList<Piece>();
     private List<Character> capturedPiecesChar = new ArrayList<>();
+    int move = 1;
 
-    // public char[][] charBoard() {
-    //     char[][] displayBoard = new char[8][8];
-    //     //System.out.println("a b c d e f g h");
-    //     for(int i = 0; i < 8; i++) {
-
-            
-    //         for(int j = 0; j < 8; j++) {
-    //             displayBoard[i][j] = board[i][j] == null ? '.' : board[i][j].getSymbol();  
-    //         }
-    //         //System.out.println(displayBoard[i][0]);
-            
-    //     }
-
-    //     return displayBoard;
-        
-    // }
+    public HashMap<Character, Integer> notation = new HashMap<>();
+    
 
     public void printBoard() {
         System.out.println("  a b c d e f g h");
@@ -36,13 +23,22 @@ public class boardLogic {
                 //System.out.println(piece == null);
                 System.out.print(symbol + " ");
             }
-            System.out.println(rank);
+            System.out.println(row);
         }
-        System.out.println("  a b c d e f g h");
+        System.out.println("  0 1 2 3 4 5 6 7");
         //System.out.println(board[0][0] == null);
     }
 
     public void initializeStart() {
+
+        notation.put('a', 0);
+        notation.put('b', 1);
+        notation.put('c', 2);
+        notation.put('d', 3);
+        notation.put('e', 4);
+        notation.put('f', 5);
+        notation.put('g', 6);
+        notation.put('h', 7);
 
         //black pieces
         board[0][0] = new Rook(Color.BLACK);
@@ -105,7 +101,10 @@ public class boardLogic {
         
         char[] currentMove = getMove().toCharArray();
         
+        
 
+        
+        //int row = notation.containsKey(currentMove[0]) ? notation.get(currentMove[0]) : currentMove[0] - '0';
         int row = currentMove[0] - '0';
         int col = currentMove[1] - '0';
 
@@ -114,15 +113,36 @@ public class boardLogic {
 
         Piece piece = board[row][col];
 
-        if(piece != null && piece.isValidMove(row, col, toRow, toCol, board) && capturePiece(row, col, toRow, toCol)) {
+        //System.out.println((move % 2 == 0) ? (board[row][col].getColor() == Color.BLACK) : (board[row][col].getColor() == Color.WHITE));
+        System.out.println(simulateCheck(row, col, toRow, toCol));
+        if(
+            piece != null && 
+            piece.isValidMove(row, col, toRow, toCol, board) && 
+            capturePiece(row, col, toRow, toCol) && 
+            moveOrder(row, col) &&
+            !simulateCheck(row, col, toRow, toCol)
+        ) {
             
             board[toRow][toCol] = piece;
             board[row][col] = null;
-        } else System.out.println("invalid");
+
+            pawnPromotion(toRow, toCol);
+
+            move++;
+            //System.out.println(move);
+
+        } 
+        
+        else System.out.println("invalid");
 
 
 
     }
+
+    private boolean moveOrder(int row, int col) {
+        return ((move % 2 == 0) ? (board[row][col].getColor() == Color.BLACK) : (board[row][col].getColor() == Color.WHITE));
+    }
+
 
 
     private boolean capturePiece(int row, int col, int toRow, int toCol) {
@@ -148,6 +168,138 @@ public class boardLogic {
 
 
     }
+
+    private int[] currentKing(Color kingColor) {
+        int[] coords = new int[2];
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece piece = board[row][col];
+                if (piece instanceof King && piece.getColor() == kingColor) {
+                    coords[0] = row;
+                    coords[1] = col;
+                    break;
+                }
+                
+            }
+        }
+        return coords;
+    };
+
+    public boolean inCheck(Color kingColor) {
+        int[] kingCoords = currentKing(kingColor);
+        int kingRow = kingCoords[0], kingCol = kingCoords[1];
+
+        Color enemy = (kingColor == Color.WHITE) ? Color.BLACK : Color.WHITE;
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece piece = board[row][col];
+                if (piece != null && piece.getColor() == enemy) {
+                    if (piece.isValidMove(row, col, kingRow, kingCol, board)) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public boolean simulateCheck(int row, int col, int toRow, int toCol) {
+        Piece currentSq = board[row][col];
+        Piece futureSq = board[toRow][toCol];
+
+        Color currentColor = currentSq.getColor();
+
+        board[toRow][toCol] = currentSq;
+        board[row][col] = null;
+
+        boolean inCheck = inCheck(currentColor);
+        //System.out.println(inCheck);
+
+        board[row][col] = currentSq;
+        board[toRow][toCol] = futureSq;
+
+        return inCheck;
+    }
+
+    public boolean checkmate() {
+        Color currentColor = (move % 2 == 0) ? Color.BLACK : Color.WHITE;
+        if(!inCheck(currentColor)) return false;
+
+        for(int row = 0; row < 8; row ++) {
+            for(int col = 0; col < 8; col++) {
+                Piece piece = board[row][col];
+                if(piece == null || piece.getColor() != currentColor) {
+                    continue;
+                }
+
+                for(int toRow = 0; toRow < 8; toRow++) {
+                    for(int toCol = 0; toCol < 8; toCol++) {
+                        if(!piece.isValidMove(row, col, toRow, toCol, board)) continue;
+                        if(simulateCheck(row, col, toRow, toCol)) continue;
+                        return false;
+                    }
+                }
+                
+            }
+        }
+
+        return true;
+        
+    }
+
+    public boolean isStalemate() {
+        Color currentColor = (move % 2 == 0) ? Color.BLACK : Color.WHITE;
+        if (inCheck(currentColor)) return false;
+
+        for(int row = 0; row < 8; row ++) {
+            for(int col = 0; col < 8; col++) {
+                Piece piece = board[row][col];
+                if(piece == null || piece.getColor() != currentColor) {
+                    continue;
+                }
+
+                for(int toRow = 0; toRow < 8; toRow++) {
+                    for(int toCol = 0; toCol < 8; toCol++) {
+                        if(!piece.isValidMove(row, col, toRow, toCol, board)) continue;
+                        if(simulateCheck(row, col, toRow, toCol)) continue;
+                        return false;
+                    }
+                }
+                
+            }
+        }
+        return false;
+    }
+
+    private void pawnPromotion(int row, int col) {
+        Piece currentPiece = board[row][col];
+        Color currentColor = currentPiece.getColor();
+        Scanner scan = new Scanner(System.in);
+
+        if(currentPiece instanceof Pawn && (row == 0 || row == 7)) {
+            System.out.println("Promotion piece: ");
+            String input = scan.nextLine();
+
+            board[row][col] = null;
+
+            if(input.equals("knight")) {
+                board[row][col] = new Knight(currentColor);
+            } else if(input.equals("queen")) {
+                board[row][col] = new Queen(currentColor);
+            } else if(input.equals("rook")) {
+                board[row][col] = new Rook(currentColor);
+            } else {
+                board[row][col] = new Bishop(currentColor);
+            }
+
+            System.out.println(input);
+
+        }
+    }
+
+
+
 
 
 

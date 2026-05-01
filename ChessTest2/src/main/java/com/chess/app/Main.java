@@ -9,25 +9,14 @@ public class Main {
         boardLogic board = new boardLogic();
         board.initializeStart();
 
-        //boolean test = (board.getMove().equals("end"));
-
-        // do {
-        //     board.printBoard();
-        //     board.getMove();
-        //     board.inputToMove();
-            
-        // } while(!board.getMove().equals("end"));
-        //System.out.println(test);
-
+        System.out.println(board.checkmate());
+        while(!board.checkmate()) {
+            board.printBoard();
+            board.inputToMove();
+        }
 
         board.printBoard();
-
-        while(!board.getMove().equals("end")) {
-
-            board.inputToMove();
-            board.printBoard();
-            
-        }
+        System.out.println("checkmate");
 
 
 

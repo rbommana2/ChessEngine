@@ -25,6 +25,14 @@ public class Pawn extends Piece {
 
     public boolean isValidMove(int row, int col, int toRow, int toCol, Piece[][] board) {
 
+        if(board[row][col].getColor() == Color.WHITE){
+            if(row < toRow) return false;
+        }
+
+        if(board[row][col].getColor() == Color.BLACK){
+            if(toRow < row) return false;
+        }
+
 
         if(firstMove(row, col, board) && Math.abs(row - toRow) == 2 && col == toCol) {
             return true;

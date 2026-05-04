@@ -1,13 +1,24 @@
 package com.chess.board;
-import com.chess.pieces.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Scanner;
+
+import com.chess.pieces.Bishop;
+import com.chess.pieces.Color;
+import com.chess.pieces.King;
+import com.chess.pieces.Knight;
+import com.chess.pieces.Pawn;
+import com.chess.pieces.Piece;
+import com.chess.pieces.Queen;
+import com.chess.pieces.Rook;
 
 public class boardLogic {
 
     public final Piece[][] board = new Piece[8][8];
     private List<Piece> capturedPieces = new ArrayList<Piece>();
     private List<Character> capturedPiecesChar = new ArrayList<>();
-    int move = 1;
+    public int move = 1;
 
     public HashMap<Character, Integer> notation = new HashMap<>();
     
@@ -115,9 +126,10 @@ public class boardLogic {
 
         //System.out.println((move % 2 == 0) ? (board[row][col].getColor() == Color.BLACK) : (board[row][col].getColor() == Color.WHITE));
         System.out.println(simulateCheck(row, col, toRow, toCol));
+        boolean enPassant = isEnPassant(row, col, toRow, toCol);
         if(
             piece != null && 
-            piece.isValidMove(row, col, toRow, toCol, board) && 
+            (piece.isValidMove(row, col, toRow, toCol, board) || enPassant) && 
             capturePiece(row, col, toRow, toCol) && 
             moveOrder(row, col) &&
             !simulateCheck(row, col, toRow, toCol)
@@ -129,6 +141,7 @@ public class boardLogic {
             pawnPromotion(toRow, toCol);
 
             move++;
+            lastMove = new LastMove(row, col, toRow, toCol, piece);
             //System.out.println(move);
 
         } 
@@ -152,7 +165,10 @@ public class boardLogic {
         Piece futurePiece = (board[toRow][toCol] == null) ? null : board[toRow][toCol];
         Color futureColor = (futurePiece == null) ? null : futurePiece.getColor();
 
-        if(currentColor != futureColor && futureColor != null) {
+        if(
+            (currentColor != futureColor && futureColor != null)
+        
+        ) {
 
             capturedPieces.add(futurePiece);
             capturedPiecesChar.add(futurePiece.getSymbol());
@@ -269,7 +285,7 @@ public class boardLogic {
                 
             }
         }
-        return false;
+        return true;
     }
 
     private void pawnPromotion(int row, int col) {
@@ -296,6 +312,42 @@ public class boardLogic {
             System.out.println(input);
 
         }
+    }
+
+    private static class LastMove {
+        int fromRow, fromCol, toRow, toCol;
+        Piece piece;
+        LastMove(int fromRow, int fromCol, int toRow, int toCol, Piece piece) {
+            this.fromRow = fromRow;
+            this.fromCol = fromCol;
+            this.toRow = toRow;
+            this.toCol = toCol;
+            this.piece = piece;
+        }
+    }
+    private LastMove lastMove = null;
+
+    private boolean isEnPassant(int row, int col, int toRow, int toCol) {
+        Piece currentPiece = board[row][col];
+
+        int dir = (currentPiece.getColor() == Color.WHITE) ? -1 : 1;
+
+        if(
+            (!(currentPiece instanceof Pawn) || lastMove == null) ||
+            (!(toRow == row + dir && Math.abs(toCol - col) == 1)) ||
+            (board[toRow][toCol] != null)  ||
+            (!(lastMove.piece instanceof Pawn)) || 
+            (lastMove.piece.getColor() == currentPiece.getColor()) || 
+            (Math.abs(lastMove.toRow - lastMove.fromRow) != 2)
+        ) return false;
+
+
+        capturedPieces.add(lastMove.piece);
+        capturedPiecesChar.add(lastMove.piece.getSymbol());
+        System.out.println(lastMove.piece.getSymbol() + " has been captured!");
+        System.out.println(capturedPiecesChar);
+
+        return lastMove.toRow == row && lastMove.toCol == toCol;
     }
 
 

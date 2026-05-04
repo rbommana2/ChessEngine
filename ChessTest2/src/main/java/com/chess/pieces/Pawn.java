@@ -1,6 +1,6 @@
 package com.chess.pieces;
 
-import java.lang.Math;
+import com.chess.board.boardLogic;
 
 public class Pawn extends Piece {
     public Pawn(Color color) {
@@ -23,6 +23,7 @@ public class Pawn extends Piece {
         return false;
     }
 
+
     private boolean capturePiece(int row, int col, int toRow, int toCol, Piece[][] board) {
         Piece currentPawn = board[row][col];
         Piece futureSq = board[toRow][toCol];
@@ -35,24 +36,21 @@ public class Pawn extends Piece {
 
     public boolean isValidMove(int row, int col, int toRow, int toCol, Piece[][] board) {
 
-        if(board[row][col].getColor() == Color.WHITE){
-            if(row < toRow) return false;
+        if(
+            (board[row][col].getColor() == Color.WHITE && (row < toRow)) ||
+            (board[row][col].getColor() == Color.BLACK && (toRow < row))
+        
+        ){
+            return false;
         }
 
-        if(board[row][col].getColor() == Color.BLACK){
-            if(toRow < row) return false;
-        }
-
-
-        if(firstMove(row, col, board) && Math.abs(row - toRow) == 2 && col == toCol) {
+        if(
+            (firstMove(row, col, board) && Math.abs(row - toRow) == 2 && col == toCol) ||
+            (Math.abs(row - toRow) == 1 && col == toCol) ||
+            (capturePiece(row, col, toRow, toCol, board))
+        ) {
             return true;
         }
-
-        if(Math.abs(row - toRow) == 1 && col == toCol) {
-            return true;
-        }
-
-        if(capturePiece(row, col, toRow, toCol, board)) return true;
 
         return false;
     }

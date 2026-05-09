@@ -35,6 +35,12 @@ public class Pawn extends Piece {
     }
 
     public boolean isValidMove(int row, int col, int toRow, int toCol, Piece[][] board) {
+        if((board[toRow][toCol] != null) && (board[toRow][toCol].getColor() == board[row][col].getColor())) return false;
+        if(row == toRow && col == toCol) return false;
+
+        if((board[row][col].getColor() == Color.WHITE && (row > toRow) && col == toCol && board[toRow][toCol] != null) ||
+        (board[row][col].getColor() == Color.BLACK && (row < toRow) && col == toCol && board[toRow][toCol] != null)
+        ) return false;
 
         if(
             (board[row][col].getColor() == Color.WHITE && (row < toRow)) ||

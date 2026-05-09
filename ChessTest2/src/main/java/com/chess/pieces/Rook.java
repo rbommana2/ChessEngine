@@ -9,17 +9,18 @@ public class Rook extends Piece {
         return 'r';
     }
 
+
     private boolean blockedFile(int row, int col, int toRow, int toCol, Piece[][] board) {
         int length = (row == toRow) ? Math.abs(col-toCol)-1 : Math.abs(row-toRow)-1;
 
         int i = (row == toRow) ? row : ((row-toRow < 0) ? row+1 : row-1);
         int j = (col == toCol) ? col : ((col-toCol < 0) ? col+1 : col-1);
-        System.out.println("working");
+        //System.out.println("working");
 
 
         for(int num = 0; num < length; num++) {
-            System.out.println("i: " + i);
-            System.out.println("j: " + j);
+            // System.out.println("i: " + i);
+            // System.out.println("j: " + j);
 
 
             if(board[i][j] != null) {
@@ -34,7 +35,13 @@ public class Rook extends Piece {
     }
 
     public boolean isValidMove(int row, int col, int toRow, int toCol, Piece[][] board) {
-        if ((row == toRow || col == toCol)
+        if((board[toRow][toCol] != null) && (board[toRow][toCol].getColor() == board[row][col].getColor())) return false;
+        
+        if(row == toRow && col == toCol) return false;
+
+
+        if (
+            (row == toRow || col == toCol)
             && blockedFile(row, col, toRow, toCol, board)
         ) {
             return true;
